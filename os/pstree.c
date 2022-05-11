@@ -9,7 +9,6 @@
 #define DEBUG 5
 #define DEBUG_CALL(level, format, ...) if(level > DEBUG) { printf(format, __VA_ARGS__); fflush(stdout); }
 
-#define LEVEL0  ""
 #define LEVEL1  " "
 #define LEVEL2  "  "
 #define LEVEL3  "   "
@@ -24,7 +23,7 @@
 #define LEVEL12 "            "
 #define PRINTNODE(level, proc) {\
     switch (level) { \
-    case 0:  printf(LEVEL0);  break; \
+    case 0:                   break; \
     case 1:  printf(LEVEL1);  break; \
     case 2:  printf(LEVEL2);  break; \
     case 3:  printf(LEVEL3);  break; \
@@ -38,7 +37,7 @@
     case 11: printf(LEVEL11); break; \
     case 12: printf(LEVEL12); break; \
     };\
-    printf("|- %s[%d] %c\n", proc->name, proc->pid, proc->status);\
+    printf("|- %s[%ld] %c\n", proc->name, proc->pid, proc->status);\
     fflush(stdout);\
 }
 
@@ -50,7 +49,7 @@ typedef long LONG;
 typedef unsigned long ULONG;
 
 typedef char CHAR;
-typedef CHAR FILEPATH[256];
+typedef CHAR FILEPATH[512];
 typedef CHAR NAME[64];
 
 /**
@@ -125,6 +124,7 @@ ProcSnapshot *getSnapshot() {
     ProcSnapshot *proc = NULL;  // the proc info pointer
     ProcSnapshot **array = NULL;// the array of proc info pointer
     LONG j;                     // the index of loop
+    LONG erret;                 // the error code for fscanf
     LONG index = -1, cap = 0;   // index & capacity of proc array
     ULONG pid = -1, ppid = -1;  // proc id & parent proc id
     CHAR status;                // status of proc
@@ -150,7 +150,9 @@ ProcSnapshot *getSnapshot() {
             continue;
         }
 
-        fscanf(fp, "%lu %s %c %lu", &pid, &name, &status, &ppid);
+        erret = fscanf(fp, "%lu %s %c %lu", &pid, name, &status, &ppid);
+        if (erret != 4)
+            DEBUG_CALL(5, "[error]fscanf error on %s", filepath)
         DEBUG_CALL(2, "%lu %s %c %lu\n", pid, name, status, ppid)
         
         index++;
